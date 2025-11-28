@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -24,34 +25,37 @@ type DBConfig struct {
 	SSLMode  string
 }
 
-// Load reads configuration from environment variables and optional .env file.
 func Load() (Config, error) {
-	_ = godotenv.Load()
+	// Overload to ensure values from .env always replace any already-set env vars.
+	err := godotenv.Overload()
+	if err != nil {
+		return Config{}, errors.New("failed to load env")
+	}
 
-	portStr := getEnv("DB_PORT", "5432")
+	portStr := os.Getenv("DB_PORT")
+	if portStr == "" {
+		portStr = "5432"
+	}
 	dbPort, err := strconv.Atoi(portStr)
 	if err != nil {
 		return Config{}, fmt.Errorf("invalid DB_PORT: %w", err)
 	}
 
 	cfg := Config{
-		AppPort: getEnv("APP_PORT", "8080"),
+		AppPort: os.Getenv("APP_PORT"),
 		DB: DBConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
+			Host:     os.Getenv("DB_HOST"),
 			Port:     dbPort,
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
-			Name:     getEnv("DB_NAME", "users_service"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Name:     os.Getenv("DB_NAME"),
+			SSLMode:  os.Getenv("DB_SSLMODE"),
 		},
 	}
 
-	return cfg, nil
-}
-
-func getEnv(key, defaultVal string) string {
-	if v, ok := os.LookupEnv(key); ok {
-		return v
+	if cfg.DB.Name == "" {
+		return Config{}, errors.New("DB_NAME must be set")
 	}
-	return defaultVal
+
+	return cfg, nil
 }

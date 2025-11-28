@@ -1,0 +1,18 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Re-run the service using go run on every change.
+cmd = "go run ./cmd/server/main.go"
+bin = ""
+full_bin = "go run ./cmd/server/main.go"
+include_ext = ["go"]
+exclude_dir = ["tmp", "vendor", ".git"]
+exclude_file = []
+log = "build.log"
+
+[log]
+time = true
+
+[misc]
+clean_on_exit = true

@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -11,10 +12,16 @@ import (
 )
 
 func NewPostgresConnection(cfg config.DBConfig) (*sql.DB, error) {
-	dsn := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode,
-	)
+	u := url.URL{
+		Scheme: "postgres",
+		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Path:   cfg.Name,
+		User:   url.UserPassword(cfg.User, cfg.Password),
+	}
+	q := u.Query()
+	q.Set("sslmode", cfg.SSLMode)
+	u.RawQuery = q.Encode()
+	dsn := u.String()
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -31,5 +38,20 @@ func NewPostgresConnection(cfg config.DBConfig) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
+	var currentDB string
+	err = db.QueryRow("SELECT current_database()").Scan(&currentDB)
+	if err != nil {
+		fmt.Printf("Error getting current database: %v\n", err)
+	} else {
+		fmt.Printf("CURRENTLY CONNECTED TO DATABASE: '%s'\n", currentDB)
+	}
+
+	var currentUser string
+	err = db.QueryRow("SELECT current_user").Scan(&currentUser)
+	if err != nil {
+		fmt.Printf("Error getting current user: %v\n", err)
+	} else {
+		fmt.Printf("CURRENT USER: '%s'\n", currentUser)
+	}
 	return db, nil
 }

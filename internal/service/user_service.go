@@ -7,6 +7,8 @@ import (
 
 	"users-service/internal/entity"
 	"users-service/internal/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -18,8 +20,14 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 }
 
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func (s *UserService) CreateUser(ctx context.Context, input CreateUserInput) (entity.User, error) {
@@ -27,9 +35,12 @@ func (s *UserService) CreateUser(ctx context.Context, input CreateUserInput) (en
 		return entity.User{}, err
 	}
 
+	hashedPassword, _ := HashPassword(input.Password)
+
 	user := entity.User{
-		Name:  strings.TrimSpace(input.Name),
-		Email: strings.TrimSpace(input.Email),
+		Name:     strings.TrimSpace(input.Name),
+		Email:    strings.TrimSpace(input.Email),
+		Password: hashedPassword,
 	}
 
 	return s.repo.Create(ctx, user)

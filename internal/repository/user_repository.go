@@ -18,14 +18,14 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user entity.User) (entity.User, error) {
 	const query = `
-		INSERT INTO users (name, email)
-		VALUES ($1, $2)
-		RETURNING id, name, email, created_at
+		INSERT INTO users (name, email, password)
+		VALUES ($1, $2, $3)
+		RETURNING id, name, email, password, created_at
 	`
 
 	var created entity.User
-	if err := r.db.QueryRowContext(ctx, query, user.Name, user.Email).
-		Scan(&created.ID, &created.Name, &created.Email, &created.CreatedAt); err != nil {
+	if err := r.db.QueryRowContext(ctx, query, user.Name, user.Email, user.Password).
+		Scan(&created.ID, &created.Name, &created.Email, &created.Password, &created.CreatedAt); err != nil {
 		return entity.User{}, fmt.Errorf("insert user: %w", err)
 	}
 
