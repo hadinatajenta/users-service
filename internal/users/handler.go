@@ -1,28 +1,26 @@
-package http
+package users
 
 import (
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-
-	"users-service/internal/service"
 )
 
-type UserHandler struct {
-	service *service.UserService
+type Handler struct {
+	service Service
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewHandler(service Service) *Handler {
+	return &Handler{service: service}
 }
 
-func (h *UserHandler) Health(c *gin.Context) {
+func (h *Handler) Health(c *gin.Context) {
 	responseSuccess(c, http.StatusOK, "Service is healthy", gin.H{"status": "ok"})
 }
 
-func (h *UserHandler) CreateUser(c *gin.Context) {
-	var req service.CreateUserInput
+func (h *Handler) CreateUser(c *gin.Context) {
+	var req CreateUserInput
 	if err := c.ShouldBindJSON(&req); err != nil {
 		responseError(c, http.StatusBadRequest, err.Error())
 		return
@@ -37,7 +35,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	responseSuccess(c, http.StatusCreated, "User created", user)
 }
 
-func (h *UserHandler) GetUserByID(c *gin.Context) {
+func (h *Handler) GetUserByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -54,7 +52,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	responseSuccess(c, http.StatusOK, "User retrieved", user)
 }
 
-func (h *UserHandler) ListUsers(c *gin.Context) {
+func (h *Handler) ListUsers(c *gin.Context) {
 	users, err := h.service.ListUsers(c.Request.Context())
 	if err != nil {
 		responseError(c, http.StatusInternalServerError, err.Error())

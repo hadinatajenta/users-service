@@ -1,4 +1,4 @@
-package http
+package users
 
 import (
 	"fmt"
@@ -16,8 +16,9 @@ type successResponse struct {
 
 // problemDetails follows RFC 7807 to provide standardized error bodies.
 type problemDetails struct {
-	Type     string `json:"type"`
-	Title    string `json:"title"`
+	Type  string `json:"type"`
+	Title string `json:"title"`
+	// Status is the HTTP status code.
 	Status   int    `json:"status"`
 	Detail   string `json:"detail,omitempty"`
 	Instance string `json:"instance,omitempty"`

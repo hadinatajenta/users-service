@@ -7,10 +7,7 @@ import (
 
 	"users-service/internal/config"
 	"users-service/internal/db"
-	handler "users-service/internal/delivery/http"
-	"users-service/internal/delivery/route"
-	"users-service/internal/repository"
-	"users-service/internal/service"
+	"users-service/internal/users"
 )
 
 func main() {
@@ -25,12 +22,12 @@ func main() {
 	}
 	defer database.Close()
 
-	userRepo := repository.NewUserRepository(database)
-	userService := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userService)
+	userRepo := users.NewRepository(database)
+	userService := users.NewService(userRepo)
+	userHandler := users.NewHandler(userService)
 
 	router := gin.Default()
-	route.Register(router, userHandler)
+	users.RegisterRoutes(router, userHandler)
 
 	addr := ":" + cfg.AppPort
 	log.Printf("starting HTTP server on %s", addr)
